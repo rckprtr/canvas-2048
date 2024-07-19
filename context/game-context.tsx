@@ -4,8 +4,9 @@ import {
   useCallback,
   useEffect,
   useReducer,
+  useState,
 } from "react";
-import { isNil, throttle } from "lodash";
+import { isNil, set, throttle } from "lodash";
 import { mergeAnimationDuration, tileCountPerDimension } from "@/constants";
 import { Tile } from "@/models/tile";
 import gameReducer, { initialState } from "@/reducers/game-reducer";
@@ -14,6 +15,7 @@ type MoveDirection = "move_up" | "move_down" | "move_left" | "move_right";
 
 export const GameContext = createContext({
   score: 0,
+  isOver: false,
   moveTiles: (_: MoveDirection) => {},
   getTiles: () => [] as Tile[],
   startGame: () => {},
@@ -21,6 +23,7 @@ export const GameContext = createContext({
 
 export default function GameProvider({ children }: PropsWithChildren) {
   const [gameState, dispatch] = useReducer(gameReducer, initialState);
+  const [isOver, setIsOver] = useState(false);
 
   const getEmptyCells = () => {
     const results: [number, number][] = [];
@@ -36,11 +39,42 @@ export default function GameProvider({ children }: PropsWithChildren) {
   };
 
   const isGameOver = () => {
-    if (getEmptyCells().length === 0) {
-      return true;
+    // Check if there are any empty cells
+    const emptyCells = getEmptyCells();
+    console.log('emptyCells', emptyCells.length);
+    if (emptyCells.length > 0) {
+      return false;
     }
-    return false;
-  }
+  
+    // Check for possible merges horizontally and vertically
+    for (let y = 0; y < tileCountPerDimension; y++) {
+      for (let x = 0; x < tileCountPerDimension; x++) {
+        const currentTileId = gameState.board[y][x];
+        const currentTile = gameState.tiles[currentTileId];
+  
+        // Check right neighbor
+        if (x < tileCountPerDimension - 1) {
+          const rightTileId = gameState.board[y][x + 1];
+          const rightTile = gameState.tiles[rightTileId];
+          if (currentTile.value === rightTile.value) {
+            return false;
+          }
+        }
+  
+        // Check bottom neighbor
+        if (y < tileCountPerDimension - 1) {
+          const bottomTileId = gameState.board[y + 1][x];
+          const bottomTile = gameState.tiles[bottomTileId];
+          if (currentTile.value === bottomTile.value) {
+            return false;
+          }
+        }
+      }
+    }
+  
+    // If we've made it here, there are no possible moves
+    return true;
+  };
 
   const appendRandomTile = () => {
     const emptyCells = getEmptyCells();
@@ -58,9 +92,21 @@ export default function GameProvider({ children }: PropsWithChildren) {
     return gameState.tilesByIds.map((tileId) => gameState.tiles[tileId]);
   };
 
-  const moveTiles = useCallback(
+  const moveTiles = (type: MoveDirection) => {
+    if (isGameOver()) {
+      console.log("Game over!");
+      setIsOver(true);
+      return;
+    }
+
+    moveTilesCallback(type);
+  }
+
+  const moveTilesCallback = useCallback(
     throttle(
-      (type: MoveDirection) => dispatch({ type }),
+      (type: MoveDirection) => {
+        dispatch({ type });
+      },
       mergeAnimationDuration * 1.05,
       { trailing: false },
     ),
@@ -68,8 +114,8 @@ export default function GameProvider({ children }: PropsWithChildren) {
   );
 
   const startGame = () => {
-    dispatch({ type: "create_tile", tile: { position: [0, 1], value: 2 } });
-    dispatch({ type: "create_tile", tile: { position: [0, 2], value: 2 } });
+    dispatch({ type: "start_game" });
+    setIsOver(false);
   };
 
   useEffect(() => {
@@ -88,6 +134,7 @@ export default function GameProvider({ children }: PropsWithChildren) {
         getTiles,
         moveTiles,
         startGame,
+        isOver,
       }}
     >
       {children}
