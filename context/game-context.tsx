@@ -35,6 +35,13 @@ export default function GameProvider({ children }: PropsWithChildren) {
     return results;
   };
 
+  const isGameOver = () => {
+    if (getEmptyCells().length === 0) {
+      return true;
+    }
+    return false;
+  }
+
   const appendRandomTile = () => {
     const emptyCells = getEmptyCells();
     if (emptyCells.length > 0) {
