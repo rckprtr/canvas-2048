@@ -21,7 +21,7 @@ export default function Home() {
         <title>Play 2048</title>
         <meta
           name="description"
-          content="Fully-functional 2048 game built in NextJS and TypeScript. Including animations."
+          content="Canvas 2048."
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="favicon.ico" />
