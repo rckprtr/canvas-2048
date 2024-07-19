@@ -6,7 +6,7 @@ import { GameContext } from "@/context/game-context";
 import MobileSwiper, { SwipeInput } from "./mobile-swiper";
 
 export default function Board() {
-  const { getTiles, moveTiles, startGame } = useContext(GameContext);
+  const { getTiles, moveTiles, startGame, isOver, score } = useContext(GameContext);
   const initialized = useRef(false);
 
   const handleKeyDown = useCallback(
@@ -83,11 +83,24 @@ export default function Board() {
     };
   }, [handleKeyDown]);
 
+  const handleRestart = () => {
+    startGame();
+  };
+
   return (
     <MobileSwiper onSwipe={handleSwipe}>
       <div className={styles.board}>
         <div className={styles.tiles}>{renderTiles()}</div>
         <div className={styles.grid}>{renderGrid()}</div>
+        {isOver && (
+          <div className={styles.overlay}>
+            <div className={styles.gameOver}>
+              <h2>Game Over!</h2>
+              <p>Your score: {score}</p>
+              <button onClick={handleRestart}>Play Again</button>
+            </div>
+          </div>
+        )}
       </div>
     </MobileSwiper>
   );

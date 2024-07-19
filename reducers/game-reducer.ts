@@ -1,4 +1,4 @@
-import { flattenDeep, isEqual, isNil } from "lodash";
+import { flattenDeep, has, isEqual, isNil } from "lodash";
 import { uid } from "uid";
 import { tileCountPerDimension } from "@/constants";
 import { Tile, TileMap } from "@/models/tile";
@@ -12,6 +12,7 @@ type State = {
 };
 type Action =
   | { type: "create_tile"; tile: Tile }
+  | { type: "start_game" }
   | { type: "clean_up" }
   | { type: "move_up" }
   | { type: "move_down" }
@@ -41,6 +42,49 @@ export default function gameReducer(
   action: Action,
 ) {
   switch (action.type) {
+    case "start_game": {
+      const newBoard = createBoard();
+      const newTiles: TileMap = {};
+      const newTilesByIds: string[] = [];
+    
+      // Function to add a random tile
+      const addRandomTile = () => {
+        const emptyCells = [];
+        for (let y = 0; y < tileCountPerDimension; y++) {
+          for (let x = 0; x < tileCountPerDimension; x++) {
+            if (newBoard[y][x] === undefined) {
+              emptyCells.push([x, y]);
+            }
+          }
+        }
+    
+        if (emptyCells.length > 0) {
+          const [x, y] = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+          const value = Math.random() < 0.9 ? 2 : 4; // 90% chance of 2, 10% chance of 4
+          const tileId = uid();
+          
+          newBoard[y][x] = tileId;
+          newTiles[tileId] = {
+            id: tileId,
+            position: [x, y],
+            value: value
+          };
+          newTilesByIds.push(tileId);
+        }
+      };
+    
+      // Add two random tiles
+      addRandomTile();
+      addRandomTile();
+    
+      return {
+        ...initialState,
+        board: newBoard,
+        tiles: newTiles,
+        tilesByIds: newTilesByIds,
+      };
+    }
+
     case "clean_up": {
       const flattenBoard = flattenDeep(state.board);
       const newTiles: TileMap = flattenBoard.reduce(
