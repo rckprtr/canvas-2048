@@ -32,6 +32,7 @@ export default function Home() {
         />
         <link rel="icon" type="image/png" sizes="32x32" href="favicon32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="favicon16.png" />
+        <meta property="og:image" content="/cover.png" />
         <meta property="dscvr:canvas:version" content="vNext" />
       </Head>
       <header>
